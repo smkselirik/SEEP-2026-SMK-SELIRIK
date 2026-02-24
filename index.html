@@ -324,119 +324,124 @@
             fetchPelajar();
         }
 
+       // Tambah pembolehubah ini di bahagian atas bersama pembolehubah global yang lain
+        let senaraiPelajarDitapis = [];
+
+        // 1. GANTIKAN FUNGSI INI: Untuk bina jadual dengan tapisan
         function binaJadualKehadiran() {
+            let kumpulanPilihan = document.getElementById("sel-kumpulan").value;
+            
+            // Tapis senarai CSV berdasarkan Kumpulan yang dipilih (Abaikan huruf besar/kecil)
+            senaraiPelajarDitapis = senaraiPelajarCSV.filter(pelajar => 
+                pelajar.kelas.toUpperCase().trim() === kumpulanPilihan.toUpperCase().trim()
+            );
+
             const tbody = document.getElementById("student-list");
             tbody.innerHTML = "";
-            senaraiPelajarCSV.forEach((pelajar, index) => {
-                let tr = document.createElement("tr");
-                tr.innerHTML = `
-                    <td>${index + 1}</td>
-                    <td><b>${pelajar.nama}</b></td>
-                    <td>${pelajar.kelas}</td>
-                    <td>
-                        <div class="radio-group">
-                            <label class="radio-H"><input type="radio" name="hadir_${index}" value="Hadir" checked> Hadir</label>
-                            <label class="radio-THB"><input type="radio" name="hadir_${index}" value="THB"> THB</label>
-                            <label class="radio-THTS"><input type="radio" name="hadir_${index}" value="THTS"> THTS</label>
-                        </div>
-                    </td>
-                `;
-                tbody.appendChild(tr);
-            });
+            
+            // Jika tiada pelajar dijumpai untuk kumpulan tersebut
+            if (senaraiPelajarDitapis.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="4" style="text-align:center; color:var(--thts); padding: 20px;"><b>Tiada pelajar dijumpai untuk kumpulan ${kumpulanPilihan}.</b><br>Sila pastikan ejaan Kumpulan di Google Sheets (Kolum F) sama dengan pilihan dropdown.</td></tr>`;
+            } else {
+                senaraiPelajarDitapis.forEach((pelajar, index) => {
+                    let tr = document.createElement("tr");
+                    tr.innerHTML = `
+                        <td>${index + 1}</td>
+                        <td><b>${pelajar.nama}</b></td>
+                        <td>${pelajar.kelas}</td>
+                        <td>
+                            <div class="radio-group">
+                                <label class="radio-H"><input type="radio" name="hadir_${index}" value="Hadir" checked> Hadir</label>
+                                <label class="radio-THB"><input type="radio" name="hadir_${index}" value="THB"> THB</label>
+                                <label class="radio-THTS"><input type="radio" name="hadir_${index}" value="THTS"> THTS</label>
+                            </div>
+                        </td>
+                    `;
+                    tbody.appendChild(tr);
+                });
+            }
+
             document.querySelector("#attendance-section p").classList.add("hidden");
             document.getElementById("student-table").classList.remove("hidden");
             document.getElementById("btn-hantar").classList.remove("hidden");
         }
 
+        // 2. GANTIKAN FUNGSI INI: Untuk mengumpul data yang telah ditapis sahaja
         async function simpanDanPapar() {
-    // PENTING: Gantikan teks di bawah dengan Web App URL yang anda salin tadi
-    const webAppUrl = "LETAK_URL_WEB_APP_ANDA_DI_SINI"; 
-    
-    // Kumpul maklumat kelas
-    let guru = document.getElementById("sel-guru").value;
-    let subjek = document.getElementById("sel-subjek").value;
-    let tingkatan = document.getElementById("sel-tingkatan").value;
-    let kumpulan = document.getElementById("sel-kumpulan").value;
-    let sesi = document.getElementById("sel-sesi").value;
-    
-    // Kumpul rekod kehadiran setiap pelajar
-    let rekodData = [];
-    senaraiPelajarCSV.forEach((pelajar, index) => {
-        let pilihan = document.querySelector(`input[name="hadir_${index}"]:checked`);
-        let status = pilihan ? pilihan.value : "Hadir";
-        rekodData.push({
-            nama: pelajar.nama,
-            kelas: pelajar.kelas,
-            status: status
-        });
-    });
+            const webAppUrl = "LETAK_URL_WEB_APP_ANDA_DI_SINI"; // Masukkan URL Google Apps Script cikgu
+            
+            let guru = document.getElementById("sel-guru").value;
+            let subjek = document.getElementById("sel-subjek").value;
+            let tingkatan = document.getElementById("sel-tingkatan").value;
+            let kumpulan = document.getElementById("sel-kumpulan").value;
+            let sesi = document.getElementById("sel-sesi").value;
+            
+            let rekodData = [];
+            
+            // PENTING: Gunakan senaraiPelajarDitapis, bukan senaraiPelajarCSV
+            senaraiPelajarDitapis.forEach((pelajar, index) => {
+                let pilihan = document.querySelector(`input[name="hadir_${index}"]:checked`);
+                let status = pilihan ? pilihan.value : "Hadir";
+                rekodData.push({ nama: pelajar.nama, kelas: pelajar.kelas, status: status });
+            });
 
-    // Susun data untuk dihantar
-    let payload = {
-        guru: guru,
-        subjek: subjek,
-        tingkatan: tingkatan,
-        kumpulan: kumpulan,
-        sesi: sesi,
-        rekod: rekodData
-    };
+            if (rekodData.length === 0) {
+                alert("Tiada data pelajar untuk disimpan.");
+                return;
+            }
 
-    let btnHantar = document.getElementById("btn-hantar");
-    btnHantar.innerText = "Sedang Menyimpan...";
-    btnHantar.disabled = true;
+            let payload = { guru: guru, subjek: subjek, tingkatan: tingkatan, kumpulan: kumpulan, sesi: sesi, rekod: rekodData };
 
-    try {
-        if(webAppUrl === "https://script.google.com/macros/s/AKfycbz--mU02xCcQAo8_GIhTcDcIKf-0dgQmM1UpZBfMcPSIimm_vpqPyztgxujrv5_aMapvA/exec") {
-            alert("Sila masukkan URL Web App Google Apps Script ke dalam kod HTML untuk simpanan sebenar.\n(Simulasi lokal dijalankan)");
-            bukaPaparRekod();
+            let btnHantar = document.getElementById("btn-hantar");
+            btnHantar.innerText = "Sedang Menyimpan...";
+            btnHantar.disabled = true;
+
+            try {
+                if(webAppUrl === "LETAK_URL_WEB_APP_ANDA_DI_SINI") {
+                    alert("Simulasi lokal: Sila masukkan URL Web App untuk simpanan sebenar ke Google Sheets.");
+                    bukaPaparRekod();
+                    btnHantar.innerText = "Simpan Kehadiran & Papar Rekod";
+                    btnHantar.disabled = false;
+                    return;
+                }
+
+                let response = await fetch(webAppUrl, { method: 'POST', body: JSON.stringify(payload) });
+                let result = await response.json();
+                
+                if(result.status === "success") {
+                    alert("Berjaya! Data kehadiran telah direkodkan ke dalam Google Sheets.");
+                    bukaPaparRekod(); 
+                } else {
+                    alert("Ralat menyimpan data: " + result.message);
+                }
+            } catch (e) {
+                alert("Ralat sambungan. (" + e.message + ")");
+            }
+
             btnHantar.innerText = "Simpan Kehadiran & Papar Rekod";
             btnHantar.disabled = false;
-            return;
         }
 
-        // Hantar data ke Google Apps Script
-        let response = await fetch(webAppUrl, {
-            method: 'POST',
-            body: JSON.stringify(payload)
-        });
-        
-        let result = await response.json();
-        
-        if(result.status === "success") {
-            alert("Berjaya! Data kehadiran telah direkodkan ke dalam Google Sheets.");
-            bukaPaparRekod(); // Buka paparan semakan selepas berjaya
-        } else {
-            alert("Ralat menyimpan data: " + result.message);
-        }
-    } catch (e) {
-        alert("Ralat sambungan: Sila pastikan anda mempunyai capaian internet. (" + e.message + ")");
-    }
-
-    btnHantar.innerText = "Simpan Kehadiran & Papar Rekod";
-    btnHantar.disabled = false;
-}
-        }
-
+        // 3. GANTIKAN FUNGSI INI: Untuk papar rekod bagi kumpulan yang ditapis sahaja
         function bukaPaparRekod() {
             document.getElementById("portal-section").classList.add("hidden");
             document.getElementById("attendance-section").classList.add("hidden");
             document.getElementById("report-section").classList.remove("hidden");
 
-            // Ambil Maklumat Semasa
             let guru = document.getElementById("sel-guru").value;
             let subjek = document.getElementById("sel-subjek").value;
             let tingkatan = document.getElementById("sel-tingkatan").value;
             let kumpulan = document.getElementById("sel-kumpulan").value;
             let sesi = document.getElementById("sel-sesi").value;
 
-            // Kiraan Statistik
             let hadir = 0, thb = 0, thts = 0;
             const reportBody = document.getElementById("report-list");
             reportBody.innerHTML = "";
 
-            senaraiPelajarCSV.forEach((pelajar, index) => {
+            // PENTING: Gunakan senaraiPelajarDitapis
+            senaraiPelajarDitapis.forEach((pelajar, index) => {
                 let pilihan = document.querySelector(`input[name="hadir_${index}"]:checked`);
-                let status = pilihan ? pilihan.value : "Hadir"; // Default
+                let status = pilihan ? pilihan.value : "Hadir"; 
                 let warna = status === "Hadir" ? "var(--hadir)" : (status === "THB" ? "var(--thb)" : "var(--thts)");
                 let warnaTeks = status === "THB" ? "black" : "white";
 
@@ -455,7 +460,6 @@
 
             let total = hadir + thb + thts;
             let peratus = total > 0 ? ((hadir / total) * 100).toFixed(2) : 0;
-
             let tarikhSemasa = new Date().toLocaleDateString("ms-MY");
 
             document.getElementById("report-summary").innerHTML = `
