@@ -1,0 +1,420 @@
+<!DOCTYPE html>
+<html lang="ms">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Portal Kehadiran SEEP 2026 - SMK Selirik</title>
+    <style>
+        :root {
+            --primary: #1e3a8a; /* Biru gelap professional */
+            --secondary: #3b82f6;
+            --bg: #f3f4f6;
+            --hadir: #22c55e; /* Hijau */
+            --thb: #eab308;   /* Kuning */
+            --thts: #ef4444;  /* Merah */
+        }
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: var(--bg);
+            margin: 0;
+            padding: 0;
+            display: flex;
+            flex-direction: column;
+            min-height: 100vh;
+        }
+        header {
+            background-color: var(--primary);
+            color: white;
+            text-align: center;
+            padding: 1.5rem;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+        header h1 { margin: 0; font-size: 1.8rem; }
+        header p { margin: 5px 0 0; font-size: 1rem; opacity: 0.9; }
+        
+        .container {
+            max-width: 1000px;
+            margin: 2rem auto;
+            padding: 2rem;
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+            flex: 1;
+            width: 90%;
+        }
+
+        /* Login Section */
+        #login-section {
+            max-width: 400px;
+            margin: 4rem auto;
+            text-align: center;
+        }
+        .form-group {
+            margin-bottom: 1.2rem;
+            text-align: left;
+        }
+        .form-group label {
+            display: block;
+            margin-bottom: 0.5rem;
+            font-weight: bold;
+            color: #374151;
+        }
+        input[type="text"], input[type="password"], select {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #d1d5db;
+            border-radius: 5px;
+            box-sizing: border-box;
+            font-size: 1rem;
+        }
+        button {
+            background-color: var(--secondary);
+            color: white;
+            border: none;
+            padding: 12px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 1rem;
+            font-weight: bold;
+            width: 100%;
+            transition: 0.3s;
+        }
+        button:hover { background-color: var(--primary); }
+        .btn-group { display: flex; gap: 10px; margin-top: 20px; }
+        .btn-group button { width: 50%; }
+
+        /* Portal Sections */
+        .hidden { display: none !important; }
+        .error-msg { color: var(--thts); text-align: center; margin-bottom: 10px; }
+
+        /* Table Styles */
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+        th, td {
+            padding: 12px;
+            text-align: left;
+            border-bottom: 1px solid #e5e7eb;
+        }
+        th { background-color: #f8fafc; color: #374151; }
+        
+        /* Attendance Radio Buttons */
+        .radio-group {
+            display: flex;
+            gap: 15px;
+        }
+        .radio-group label {
+            padding: 5px 10px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-weight: 500;
+            font-size: 0.9rem;
+            color: white;
+        }
+        .radio-H { background-color: var(--hadir); }
+        .radio-THB { background-color: var(--thb); color: black !important;}
+        .radio-THTS { background-color: var(--thts); }
+
+        .summary-card {
+            background: #f8fafc;
+            padding: 15px;
+            border-left: 5px solid var(--primary);
+            margin-bottom: 20px;
+            border-radius: 4px;
+        }
+
+        footer {
+            text-align: center;
+            padding: 1.5rem;
+            background-color: #1f2937;
+            color: #9ca3af;
+            font-size: 0.9rem;
+            margin-top: auto;
+        }
+    </style>
+</head>
+<body>
+
+    <header>
+        <h1>SMK SELIRIK, KAPIT</h1>
+        <p>Portal Rekod Kehadiran Kelas SEEP 2026</p>
+    </header>
+
+    <div id="login-section" class="container">
+        <h2>Log Masuk Guru</h2>
+        <p class="error-msg hidden" id="login-error">ID atau Kata Laluan salah. Sila cuba lagi.</p>
+        <div class="form-group">
+            <label for="userid">ID Guru</label>
+            <input type="text" id="userid" placeholder="Masukkan ID">
+        </div>
+        <div class="form-group">
+            <label for="password">Kata Laluan</label>
+            <input type="password" id="password" placeholder="Masukkan Kata Laluan">
+        </div>
+        <button onclick="semakLogin()">Log Masuk</button>
+    </div>
+
+    <div id="portal-section" class="container hidden">
+        <h2>Tetapan Kelas & Sesi</h2>
+        <div class="form-group">
+            <label>Nama Guru</label>
+            <select id="sel-guru"></select>
+        </div>
+        <div class="form-group">
+            <label>Subjek Diajar</label>
+            <select id="sel-subjek"></select>
+        </div>
+        <div class="form-group">
+            <label>Tingkatan</label>
+            <select id="sel-tingkatan"></select>
+        </div>
+        <div class="form-group">
+            <label>Kumpulan</label>
+            <select id="sel-kumpulan"></select>
+        </div>
+        <div class="form-group">
+            <label>Sesi</label>
+            <select id="sel-sesi"></select>
+        </div>
+        
+        <div class="btn-group">
+            <button onclick="bukaTandaKehadiran()" style="background-color: #10b981;">Tanda Kehadiran</button>
+            <button onclick="bukaPaparRekod()" style="background-color: #3b82f6;">Papar Rekod Kehadiran</button>
+        </div>
+    </div>
+
+    <div id="attendance-section" class="container hidden">
+        <h2 id="att-title">Tanda Kehadiran</h2>
+        <p>Sila tunggu, sedang memuat turun senarai pelajar...</p>
+        <table id="student-table" class="hidden">
+            <thead>
+                <tr>
+                    <th>Bil</th>
+                    <th>Nama Pelajar</th>
+                    <th>Kelas</th>
+                    <th>Status Kehadiran</th>
+                </tr>
+            </thead>
+            <tbody id="student-list"></tbody>
+        </table>
+        <br>
+        <button id="btn-hantar" class="hidden" onclick="simpanDanPapar()">Simpan Kehadiran & Papar Rekod</button>
+        <button onclick="kembaliKePortal()" style="background-color: #6b7280; margin-top:10px;">Kembali</button>
+    </div>
+
+    <div id="report-section" class="container hidden">
+        <h2>Laporan Rekod Kehadiran</h2>
+        <div class="summary-card" id="report-summary">
+            </div>
+        
+        <table>
+            <thead>
+                <tr>
+                    <th>Nama Pelajar</th>
+                    <th>Kelas</th>
+                    <th>Status</th>
+                </tr>
+            </thead>
+            <tbody id="report-list"></tbody>
+        </table>
+        <button onclick="kembaliKePortal()" style="background-color: #6b7280; margin-top:20px; width: 200px;">Kembali</button>
+    </div>
+
+    <footer>
+        &copy; Hakcipta NDJE@Selirik, Kapit 2026
+    </footer>
+
+    <script>
+        // Data Dropdowns (Sesuai permintaan)
+        const senaraiGuru = [
+            "NATALIE DAMIE ANAK JACOB ENGGAH", "RUNA ANAK SANGGONG", "ARNOLD AUGUSTINE JUNIOR", 
+            "DARREN GILBERT ANAK KOH", "GEORGE CHONG", "LORRAINNA SIERRA ANAK MEGONG", 
+            "SANTI ANAK THOMAS NANANG", "CHRISTINA GADING ANAK MERING", "AUDIE PETER ANAK JOACHIM", 
+            "VANESSA PUTEH", "MOHD FARIDH REZZA BIN MOHD SABLI", "BELLA ALFEYANA BOBBY", 
+            "GRAY ANAK JOWIM@JOWIN", "KAREN ANAK MAWAS", "AQKMAL HAZIM BIN MUD", 
+            "JACKSON LEON ANAK SEBA", "YONG KAI SIONG", "ALEXANDRA ANAK ANDREW KANA", 
+            "TIONG SIEW HOON", "TONY WONG CHEE LOONG", "GONZALES ANAK ABING", 
+            "NURUL SAMIZA BINTI ABANG", "NURSYAMIERA BINTI MAJAIE", "ANDREA ANAK RIWIK", 
+            "MUHAMMAD HANIF IQWAN BIN ABD AZIZ", "MOHD. JAIEROL BIN JUMIN", "NUR ATHIRAH BINTI MD NOR", 
+            "MELISSA BINTI MANDE", "THANNIE BINTI BETTY", "DIANA ANAK LIMBI", 
+            "NORSYAZWANI BINTI SALAINI", "SIA KANG YEE", "CHE MOHD UDAIY BIN CHE ABDUL HADI", 
+            "BRENDA AIMA ANAK JOSHUA MARIYAM", "CATHERINE TING LEH MEE", "AMMY CYNTHIA ANAK ACHAN", 
+            "STEPHANIE ANAK JUKY", "NUR ELLYSHA BINTI NUR MUSWARIE"
+        ];
+        const senaraiSubjek = ["English Language", "Sejarah", "Mathematics / Matematik", "Sains", "Biology", "Physics", "Chemistry", "Additional Mathematics"];
+        const senaraiTingkatan = ["Tingkatan 1", "Tingkatan 2", "Tingkatan 3", "Tingkatan 4 (ART)", "Tingkatan 4 (Science)", "Tingkatan 5 (Art)", "Tingkatan 5 (Science)"];
+        const senaraiKumpulan = ["Diamond", "Ruby", "Sapphire", "Emerald", "Amethyst", "Jadeite"];
+        const senaraiSesi = Array.from({length: 18}, (_, i) => `Sesi ${i+1} / Session ${i+1}`);
+
+        // Pembolehubah Global
+        const csvUrl = "https://docs.google.com/spreadsheets/d/e/2PACX-1vT-E65EqJNmNNBx_5vhj0DHke3uNqJ6U1nxAAZVRJ-MtsZY5XOET3DscsIpp78AlGVvQXYv4PZjzOv1/pub?gid=1254826164&single=true&output=csv";
+        let senaraiPelajarCSV = []; 
+
+        // Fungsi Isi Dropdown
+        function isikanDropdown() {
+            const isikan = (id, data) => {
+                let el = document.getElementById(id);
+                data.forEach(item => {
+                    let opt = document.createElement("option");
+                    opt.value = item; opt.innerHTML = item;
+                    el.appendChild(opt);
+                });
+            };
+            isikan("sel-guru", senaraiGuru);
+            isikan("sel-subjek", senaraiSubjek);
+            isikan("sel-tingkatan", senaraiTingkatan);
+            isikan("sel-kumpulan", senaraiKumpulan);
+            isikan("sel-sesi", senaraiSesi);
+        }
+
+        // Fungsi Log Masuk
+        function semakLogin() {
+            let id = document.getElementById("userid").value;
+            let pass = document.getElementById("password").value;
+            if (id === "Guru" && pass === "SEEP2026") {
+                document.getElementById("login-section").classList.add("hidden");
+                document.getElementById("portal-section").classList.remove("hidden");
+                isikanDropdown();
+            } else {
+                document.getElementById("login-error").classList.remove("hidden");
+            }
+        }
+
+        // Ambil Data CSV
+        async function fetchPelajar() {
+            try {
+                const response = await fetch(csvUrl);
+                const data = await response.text();
+                // Parse CSV mudah: Baris dan Lajur (Lajur E=4, F=5; 0-indexed)
+                const rows = data.split("\n").slice(1); // Buang header
+                senaraiPelajarCSV = rows.map(row => {
+                    const cols = row.split(",");
+                    return { 
+                        nama: cols[4] ? cols[4].trim() : "Tiada Rekod", 
+                        kelas: cols[5] ? cols[5].trim() : "Tiada Rekod" 
+                    };
+                }).filter(p => p.nama !== "" && p.nama !== "Tiada Rekod");
+                
+                // Jika fail CSV sebenar kosong, kita cipta dummy pelajar untuk demo berfungsi
+                if(senaraiPelajarCSV.length === 0) {
+                    senaraiPelajarCSV = [
+                        {nama: "AWANGKU FAKHRULLAH", kelas: "4 AMANAH"},
+                        {nama: "DAYANGKU SOFEA", kelas: "4 AMANAH"},
+                        {nama: "STEPHEN ANAK BAYANG", kelas: "4 BERSATU"}
+                    ];
+                }
+                binaJadualKehadiran();
+            } catch (error) {
+                alert("Ralat memuat turun CSV Google Sheets. Pastikan link telah di 'Publish to Web'.\nData demo dipaparkan.");
+                senaraiPelajarCSV = [{nama: "PELAJAR DEMO 1", kelas: "SEEP"}, {nama: "PELAJAR DEMO 2", kelas: "SEEP"}];
+                binaJadualKehadiran();
+            }
+        }
+
+        function bukaTandaKehadiran() {
+            document.getElementById("portal-section").classList.add("hidden");
+            document.getElementById("attendance-section").classList.remove("hidden");
+            
+            let kumpulan = document.getElementById("sel-kumpulan").value;
+            let sesi = document.getElementById("sel-sesi").value;
+            document.getElementById("att-title").innerText = `Tanda Kehadiran: ${kumpulan} (${sesi})`;
+            
+            fetchPelajar();
+        }
+
+        function binaJadualKehadiran() {
+            const tbody = document.getElementById("student-list");
+            tbody.innerHTML = "";
+            senaraiPelajarCSV.forEach((pelajar, index) => {
+                let tr = document.createElement("tr");
+                tr.innerHTML = `
+                    <td>${index + 1}</td>
+                    <td><b>${pelajar.nama}</b></td>
+                    <td>${pelajar.kelas}</td>
+                    <td>
+                        <div class="radio-group">
+                            <label class="radio-H"><input type="radio" name="hadir_${index}" value="Hadir" checked> Hadir</label>
+                            <label class="radio-THB"><input type="radio" name="hadir_${index}" value="THB"> THB</label>
+                            <label class="radio-THTS"><input type="radio" name="hadir_${index}" value="THTS"> THTS</label>
+                        </div>
+                    </td>
+                `;
+                tbody.appendChild(tr);
+            });
+            document.querySelector("#attendance-section p").classList.add("hidden");
+            document.getElementById("student-table").classList.remove("hidden");
+            document.getElementById("btn-hantar").classList.remove("hidden");
+        }
+
+        function simpanDanPapar() {
+            // Dalam realiti, data ini akan dipost ke Google Apps Script di sini.
+            alert("Data kehadiran berjaya direkod! (Simulasi lokal)");
+            bukaPaparRekod();
+        }
+
+        function bukaPaparRekod() {
+            document.getElementById("portal-section").classList.add("hidden");
+            document.getElementById("attendance-section").classList.add("hidden");
+            document.getElementById("report-section").classList.remove("hidden");
+
+            // Ambil Maklumat Semasa
+            let guru = document.getElementById("sel-guru").value;
+            let subjek = document.getElementById("sel-subjek").value;
+            let tingkatan = document.getElementById("sel-tingkatan").value;
+            let kumpulan = document.getElementById("sel-kumpulan").value;
+            let sesi = document.getElementById("sel-sesi").value;
+
+            // Kiraan Statistik
+            let hadir = 0, thb = 0, thts = 0;
+            const reportBody = document.getElementById("report-list");
+            reportBody.innerHTML = "";
+
+            senaraiPelajarCSV.forEach((pelajar, index) => {
+                let pilihan = document.querySelector(`input[name="hadir_${index}"]:checked`);
+                let status = pilihan ? pilihan.value : "Hadir"; // Default
+                let warna = status === "Hadir" ? "var(--hadir)" : (status === "THB" ? "var(--thb)" : "var(--thts)");
+                let warnaTeks = status === "THB" ? "black" : "white";
+
+                if (status === "Hadir") hadir++;
+                else if (status === "THB") thb++;
+                else thts++;
+
+                let tr = document.createElement("tr");
+                tr.innerHTML = `
+                    <td>${pelajar.nama}</td>
+                    <td>${pelajar.kelas}</td>
+                    <td><span style="background-color: ${warna}; color: ${warnaTeks}; padding: 4px 10px; border-radius: 4px; font-size: 0.9rem;">${status}</span></td>
+                `;
+                reportBody.appendChild(tr);
+            });
+
+            let total = hadir + thb + thts;
+            let peratus = total > 0 ? ((hadir / total) * 100).toFixed(2) : 0;
+
+            let tarikhSemasa = new Date().toLocaleDateString("ms-MY");
+
+            document.getElementById("report-summary").innerHTML = `
+                <p><strong>Nama Guru:</strong> ${guru}</p>
+                <p><strong>Subjek:</strong> ${subjek}</p>
+                <p><strong>Tingkatan:</strong> ${tingkatan} | <strong>Kumpulan:</strong> ${kumpulan}</p>
+                <p><strong>Sesi:</strong> ${sesi} | <strong>Tarikh:</strong> ${tarikhSemasa}</p>
+                <hr style="border:1px solid #e5e7eb; margin: 10px 0;">
+                <div style="display:flex; justify-content:space-between; text-align:center;">
+                    <div><h3 style="color:var(--hadir); margin:0;">${hadir}</h3><small>Hadir</small></div>
+                    <div><h3 style="color:var(--thb); margin:0;">${thb}</h3><small>THB</small></div>
+                    <div><h3 style="color:var(--thts); margin:0;">${thts}</h3><small>THTS</small></div>
+                    <div><h3 style="color:var(--primary); margin:0;">${peratus}%</h3><small>Peratusan</small></div>
+                </div>
+            `;
+        }
+
+        function kembaliKePortal() {
+            document.getElementById("attendance-section").classList.add("hidden");
+            document.getElementById("report-section").classList.add("hidden");
+            document.getElementById("portal-section").classList.remove("hidden");
+        }
+    </script>
+</body>
+</html>
